@@ -1,0 +1,31 @@
+{
+  "key": "personas",
+  "name": "Personas",
+  "version": 1,
+  "description": "A board of the people in your process: customers, staff, approvers, suppliers. Capture each one's role, goals and pain points, then connect them to show who works with whom.",
+  "layout": {
+    "type": "free"
+  },
+  "zones": [],
+  "palette": [
+    "note",
+    "text",
+    "process"
+  ],
+  "personas": true,
+  "shapes": {
+    "item": {
+      "defaultLabel": "Persona name",
+      "defaultShape": "persona",
+      "fields": [
+        {
+          "key": "notes",
+          "label": "Notes",
+          "type": "textarea"
+        }
+      ]
+    }
+  },
+  "rules": {},
+  "accent": "#7A4E6B"
+}

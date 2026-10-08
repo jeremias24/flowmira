@@ -1,0 +1,18 @@
+# ── NEW ── Dev port overlay: use when the IPC portal stacks already hold :8000 (ipcc-nginx)
+# and :8001 (ums-nginx) on this machine. Add it after docker-compose.dev.yml:
+#   docker compose --project-directory . -f audit-notes/fixes/docker-compose.yml \
+#     -f docker-compose.dev.yml -f audit-notes/fixes/docker-compose.dev-ports.yml up --build
+# Frontend: http://localhost:5173   API docs: http://localhost:8010/docs   ERD: http://localhost:8012
+services:
+  backend:
+    ports: !override
+      - "8010:8000"
+
+  erd:
+    ports: !override
+      - "8012:8001"   # 8011 is taken by bams-local-fastapi
+
+  frontend:
+    environment:
+      VITE_API_URL: http://localhost:8010
+      VITE_ERD_API_URL: http://localhost:8012

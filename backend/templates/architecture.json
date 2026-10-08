@@ -1,0 +1,54 @@
+{
+  "key": "architecture",
+  "name": "Architecture",
+  "version": 1,
+  "accent": "#4F46B5",
+  "description": "System and software architecture: clients, services, databases, queues and infrastructure, and how they talk to each other.",
+  "layout": {
+    "type": "free"
+  },
+  "zones": [],
+  "palette": [
+    "service",
+    "server",
+    "database",
+    "queue",
+    "cloud",
+    "component",
+    "package",
+    "browser",
+    "mobile",
+    "actor",
+    "uml-class",
+    "firewall",
+    "load-balancer",
+    "process",
+    "note",
+    "text",
+    "document"
+  ],
+  "shapes": {
+    "item": {
+      "defaultLabel": "Service",
+      "defaultShape": "service",
+      "fields": [
+        {
+          "key": "tech",
+          "label": "Technology (e.g. FastAPI, PostgreSQL)",
+          "type": "text"
+        },
+        {
+          "key": "owner",
+          "label": "Owner / team",
+          "type": "text"
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "type": "textarea"
+        }
+      ]
+    }
+  },
+  "rules": {}
+}

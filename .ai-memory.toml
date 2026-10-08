@@ -1,0 +1,3 @@
+# ai-memory scope for this checkout. See ai-memory/docs/marker-file.md.
+workspace = "default"
+project = "flowmira"

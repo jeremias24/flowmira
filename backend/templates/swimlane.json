@@ -1,0 +1,80 @@
+{
+  "key": "swimlane",
+  "name": "Swimlane",
+  "version": 1,
+  "accent": "#24657A",
+  "description": "Who does what, in what order. One lane per role, team or system; steps flow left to right and arrows show hand-offs between lanes.",
+  "layout": {
+    "type": "rows",
+    "zoneWidth": 1800,
+    "zoneHeight": 170,
+    "gap": 0,
+    "headerWidth": 140,
+    "itemHeight": 64,
+    "itemGap": 48
+  },
+  "zones": [
+    {
+      "id": "requester",
+      "label": "Requester",
+      "color": "#7A4E6B"
+    },
+    {
+      "id": "front-office",
+      "label": "Front office",
+      "color": "#2B5F9E"
+    },
+    {
+      "id": "approver",
+      "label": "Approver",
+      "color": "#2F7D4F"
+    },
+    {
+      "id": "system",
+      "label": "System",
+      "color": "#4A5866"
+    }
+  ],
+  "editableZones": true,
+  "zoneNoun": "lane",
+  "palette": [
+    "task",
+    "event-start",
+    "event-end",
+    "event-timer",
+    "event-message",
+    "gateway-excl",
+    "gateway-para",
+    "document",
+    "database",
+    "subprocess",
+    "note",
+    "text"
+  ],
+  "shapes": {
+    "item": {
+      "defaultLabel": "Task",
+      "defaultShape": "task",
+      "fields": [
+        {
+          "key": "system",
+          "label": "System / tool",
+          "type": "text"
+        },
+        {
+          "key": "duration",
+          "label": "Cycle time",
+          "type": "text"
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "type": "textarea"
+        }
+      ]
+    }
+  },
+  "rules": {
+    "itemsSnapToZone": true
+  }
+}

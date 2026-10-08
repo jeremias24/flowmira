@@ -1,0 +1,70 @@
+{
+  "key": "flowchart",
+  "name": "Flowchart",
+  "version": 5,
+  "description": "A free canvas for process maps and flowcharts, with every shape in the toolbox. Drag shapes from the left, then connect them with arrows. Fold a toolbox category you don't need.",
+  "layout": {
+    "type": "free"
+  },
+  "zones": [],
+  "palette": [
+    "process",
+    "note",
+    "circle",
+    "text",
+    "card",
+    "decision",
+    "terminator",
+    "data",
+    "document",
+    "subprocess",
+    "task",
+    "event-start",
+    "event-end",
+    "event-timer",
+    "event-message",
+    "gateway-excl",
+    "gateway-para",
+    "database",
+    "server",
+    "cloud",
+    "queue",
+    "service",
+    "browser",
+    "mobile",
+    "actor",
+    "component",
+    "package",
+    "uml-class",
+    "firewall",
+    "load-balancer",
+    "dfd-process",
+    "dfd-entity",
+    "dfd-store"
+  ],
+  "shapes": {
+    "item": {
+      "defaultLabel": "Step",
+      "defaultShape": "process",
+      "fields": [
+        {
+          "key": "owner",
+          "label": "Owner",
+          "type": "text"
+        },
+        {
+          "key": "duration",
+          "label": "Cycle time",
+          "type": "text"
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "type": "textarea"
+        }
+      ]
+    }
+  },
+  "rules": {},
+  "accent": "#3E6A8A"
+}

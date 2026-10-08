@@ -1,0 +1,86 @@
+{
+  "key": "sipoc",
+  "name": "SIPOC",
+  "version": 5,
+  "description": "Suppliers, inputs, process, outputs, customers — a high-level view of a process before you map it in detail.",
+  "layout": {
+    "type": "columns",
+    "zoneWidth": 230,
+    "zoneHeight": 620,
+    "gap": 14,
+    "itemHeight": 72,
+    "itemGap": 26,
+    "headerHeight": 58
+  },
+  "zones": [
+    {
+      "id": "suppliers",
+      "label": "Suppliers",
+      "hint": "Who provides the inputs?",
+      "color": "#5B7F6E"
+    },
+    {
+      "id": "inputs",
+      "label": "Inputs",
+      "hint": "What goes into the process?",
+      "color": "#3E6A8A"
+    },
+    {
+      "id": "process",
+      "label": "Process",
+      "hint": "4–7 high-level steps",
+      "color": "#1F3A52"
+    },
+    {
+      "id": "outputs",
+      "label": "Outputs",
+      "hint": "What comes out?",
+      "color": "#8A6A2E"
+    },
+    {
+      "id": "customers",
+      "label": "Customers",
+      "hint": "Who receives the outputs?",
+      "color": "#7A4E6B"
+    }
+  ],
+  "shapes": {
+    "item": {
+      "defaultLabel": "New item",
+      "fields": [
+        {
+          "key": "owner",
+          "label": "Owner",
+          "type": "text",
+          "showOnCard": true
+        },
+        {
+          "key": "requirement",
+          "label": "Requirement / CTQ",
+          "type": "text",
+          "showOnCard": true,
+          "cardLabel": "CTQ"
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "type": "textarea"
+        }
+      ],
+      "defaultShape": "card"
+    }
+  },
+  "rules": {
+    "itemsSnapToZone": true
+  },
+  "palette": [
+    "card",
+    "process",
+    "decision",
+    "terminator",
+    "data",
+    "document",
+    "note"
+  ],
+  "accent": "#1F3A52"
+}

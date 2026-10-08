@@ -1,0 +1,33 @@
+{
+  "key": "dfd",
+  "name": "Data Flow Diagram",
+  "version": 1,
+  "accent": "#1F6B85",
+  "description": "How data moves through a system: processes (numbered), external entities, data stores, and labelled data flows between them.",
+  "layout": {
+    "type": "free"
+  },
+  "zones": [],
+  "palette": [
+    "dfd-process",
+    "dfd-entity",
+    "dfd-store",
+    "note",
+    "text"
+  ],
+  "personas": false,
+  "shapes": {
+    "item": {
+      "defaultLabel": "Process",
+      "defaultShape": "dfd-process",
+      "fields": [
+        {
+          "key": "notes",
+          "label": "Notes",
+          "type": "textarea"
+        }
+      ]
+    }
+  },
+  "rules": {}
+}

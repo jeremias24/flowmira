@@ -1,0 +1,149 @@
+# ── NEW ── Standalone production stack; do not combine with the local Compose files.
+name: flowmira-prod
+
+# Flowmira: nginx (frontend + API proxy) -> flowmira-diagram (diagrams API)
+#                                      -> flowmira-erd     (database ERDs API)
+#                                      -> flowmira-db      (PostgreSQL: Flowmira's own data)
+# Run:  docker compose up -d --build     Open: http://localhost:8080
+services:
+  db:
+    container_name: flowmira-prod-db   # ── FIX ── fixed name, no Compose "-1" suffix
+    image: postgres:16-alpine
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+    networks:
+      - flowmira-network
+    environment:
+      TZ: Asia/Manila
+      POSTGRES_DB: ${POSTGRES_DB:-flowmira}
+      POSTGRES_USER: ${POSTGRES_USER:-flowmira}
+      # ── FIX ── no default password: it must be set in .env (backend and erd used to
+      # fall back to different ones, rootpass / change-me)
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Diagrams module: SIPOC, DMAIC, Swimlane, Flowchart, Architecture, Personas
+  backend:
+    container_name: flowmira-prod-backend   # ── FIX ── fixed name, no Compose "-1" suffix
+    build: ./backend
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+    networks:
+      - flowmira-network
+    environment:
+      TZ: Asia/Manila
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-flowmira}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-flowmira}
+      # ── NEW ── encrypts diagram/ERD ids in addresses; the same key for backend and erd
+      FLOWMIRA_ID_KEY: ${FLOWMIRA_ID_KEY:?set FLOWMIRA_ID_KEY in .env (see .env.example)}
+      # ── FIX ── the address people open Flowmira at (prod: https://<host>)
+      CORS_ORIGINS: ${APP_ORIGIN:?set APP_ORIGIN to the production scheme and host}
+      # ── NEW ── sign-in through the IPC portal / UMS (see .env.example)
+      UMS_AUTH_URL: ${UMS_AUTH_URL:?set UMS_AUTH_URL in .env}
+      UMS_TIMEOUT: ${UMS_TIMEOUT:-10}
+      ACCESS_RECHECK_MINUTES: ${ACCESS_RECHECK_MINUTES:-5}
+      # ── FIX ── Active access is read through sp_user_system_active_accesses.
+      IPC_DB_HOST: ${IPC_DB_HOST:?set IPC_DB_HOST in .env}
+      IPC_DB_PORT: ${IPC_DB_PORT:-3306}
+      IPC_DB_NAME: ${IPC_DB_NAME:-ipc_centralized}
+      IPC_DB_USER: ${IPC_DB_USER:?set IPC_DB_USER}
+      IPC_DB_PASSWORD: ${IPC_DB_PASSWORD:?set IPC_DB_PASSWORD}
+      FLOWMIRA_SYSTEM_CODE: ${FLOWMIRA_SYSTEM_CODE:-SYS-222-FM}
+      FLOWMIRA_OWNER_TYPE_IDS: ${FLOWMIRA_OWNER_TYPE_IDS:-2,3}
+      FLOWMIRA_USER_TYPE_IDS: ${FLOWMIRA_USER_TYPE_IDS:-5,13}
+      SESSION_HOURS: ${SESSION_HOURS:-8}
+      COOKIE_SECURE: ${COOKIE_SECURE:-1}
+    extra_hosts:
+      # ── NEW ── lets a UMS running on the Docker host be reached as "host.docker.internal"
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health', timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 12
+      start_period: 10s
+
+  # ERD module: reads database schemas (view only) and stores DBML diagrams.
+  # ── NEW ── System owners only: nginx checks every /api/erd/ request with the backend first.
+  # Never publish a port for this service in production; nginx is the only way in.
+  erd:
+    container_name: flowmira-prod-erd   # ── FIX ── fixed name, no Compose "-1" suffix
+    build: ./erd
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+    networks:
+      - flowmira-network
+    environment:
+      TZ: Asia/Manila
+      # ── FIX ── same password as the db and backend (was a different default, change-me)
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-flowmira}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-flowmira}
+      # ── NEW ── encrypts diagram/ERD ids in addresses; the same key for backend and erd
+      FLOWMIRA_ID_KEY: ${FLOWMIRA_ID_KEY:?set FLOWMIRA_ID_KEY in .env (see .env.example)}
+      CORS_ORIGINS: ${APP_ORIGIN:?set APP_ORIGIN to the production scheme and host}
+      # Optional: restrict which database servers may be inspected (see .env.example)
+      ERD_ALLOWED_HOSTS: ${ERD_ALLOWED_HOSTS:-}
+    extra_hosts:
+      # lets users inspect a database running on the Docker host as "host.docker.internal"
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/api/erd/health', timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 12
+      start_period: 10s
+
+  frontend:
+    container_name: flowmira-prod-frontend   # ── FIX ── fixed name, no Compose "-1" suffix
+    build:
+      context: ./frontend
+      args:
+        VITE_BASE_PATH: /flowmira/
+        VITE_API_URL: /flowmira
+        VITE_ERD_API_URL: /flowmira
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Manila
+    # ── NEW ── Traefik strips /flowmira before nginx handles SPA and /api routes.
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-network"
+      - "traefik.http.routers.flowmira.rule=(Host(`172.21.0.216`) || Host(`apps.isuzuphil.com`)) && (Path(`/flowmira`) || PathPrefix(`/flowmira/`))"
+      - "traefik.http.routers.flowmira.middlewares=flowmira-slash,flowmira-strip"
+      - "traefik.http.routers.flowmira.service=flowmira-web"
+      - "traefik.http.services.flowmira-web.loadbalancer.server.port=80"
+      - 'traefik.http.middlewares.flowmira-slash.redirectregex.regex=^(https?://[^/]+/flowmira)$$'
+      - 'traefik.http.middlewares.flowmira-slash.redirectregex.replacement=$${1}/'
+      - "traefik.http.middlewares.flowmira-slash.redirectregex.permanent=true"
+      - "traefik.http.middlewares.flowmira-strip.stripprefix.prefixes=/flowmira"
+    networks:
+      - flowmira-network
+      - traefik-network
+    depends_on:
+      backend:
+        condition: service_healthy
+      erd:
+        condition: service_healthy
+
+networks:
+  flowmira-network:
+    name: flowmira-network
+  traefik-network:
+    name: traefik-network
+    external: true
+
+volumes:
+  pgdata:

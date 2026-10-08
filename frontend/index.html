@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Flowmira</title>
+    <!-- ── NEW ── Flowmira's own tab icon. Vite adds the base path (/flowmira/) at build time,
+         so the browser no longer falls back to /favicon.ico, which Traefik sends to another app. -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <meta name="theme-color" content="#16222e" />
+    <script>
+      // Apply the saved theme before the app loads (avoids a light flash in dark mode).
+      try {
+        var p = localStorage.getItem("flowmira-theme") || "system";
+        var d =
+          p === "dark" ||
+          (p === "system" &&
+            matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = d ? "dark" : "light";
+        document.documentElement.style.colorScheme = d ? "dark" : "light";
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+# ── NEW ── Local run at http://127.0.0.1/flowmira through the Traefik already on :80. No published ports.
+# Run from the project root:
+#   docker compose -f docker-compose.prod.yml -f audit-notes/fixes/docker-compose.local-traefik.yml up -d --build
+# Goes on top of docker-compose.prod.yml, so it never needs root docker-compose.yml (its :8080 is
+# taken by Traefik's own API on this machine). Secrets still come from .env; nothing here replaces them.
+services:
+  backend:
+    networks:
+      - flowmira-network
+      - traefik-network   # to reach ums-nginx by name; traefik.enable=false keeps it unpublished
+    environment:
+      CORS_ORIGINS: http://127.0.0.1
+      # Direct to UMS's nginx: this path has no /ums, Traefik only adds that for outside callers.
+      UMS_AUTH_URL: http://ums-nginx/api/v1
+      COOKIE_SECURE: "0"   # plain http on 127.0.0.1
+
+  erd:
+    environment:
+      CORS_ORIGINS: http://127.0.0.1
+
+  frontend:
+    # Same keys as docker-compose.prod.yml, so these two replace its production rule.
+    labels:
+      - "traefik.http.routers.flowmira.rule=Host(`127.0.0.1`) && (Path(`/flowmira`) || PathPrefix(`/flowmira/`))"
+      - "traefik.http.routers.flowmira.entrypoints=web"

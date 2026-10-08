@@ -1,0 +1,52 @@
+{
+  "key": "fishbone",
+  "name": "Fishbone (Ishikawa)",
+  "version": 1,
+  "accent": "#A4452C",
+  "description": "Find the root causes of a problem. Write the problem in the head on the right, then add causes to each bone with its +. Causes line up along the bone by themselves. Rename, add, remove or reorder bones in the Details panel.",
+  "layout": {
+    "type": "fishbone",
+    "zoneWidth": 340,
+    "zoneHeight": 240,
+    "gap": 0,
+    "itemHeight": 36,
+    "itemGap": 10,
+    "headerHeight": 44
+  },
+  "zones": [
+    { "id": "people", "label": "People", "hint": "Skills, training, staffing, communication", "color": "#2B5F9E" },
+    { "id": "method", "label": "Method", "hint": "Procedures, rules, work instructions", "color": "#2F7D4F" },
+    { "id": "machine", "label": "Machine", "hint": "Equipment, tools, systems", "color": "#7A4E6B" },
+    { "id": "material", "label": "Material", "hint": "Inputs, parts, data received", "color": "#8A6A1F" },
+    { "id": "measurement", "label": "Measurement", "hint": "Inspection, metrics, calibration", "color": "#24657A" },
+    { "id": "environment", "label": "Environment", "hint": "Workplace, conditions, outside factors", "color": "#A4452C" }
+  ],
+  "editableZones": true,
+  "zoneNoun": "bone",
+  "personas": false,
+  "palette": [
+    "text",
+    "process",
+    "card",
+    "note"
+  ],
+  "shapes": {
+    "item": {
+      "defaultLabel": "Cause",
+      "defaultShape": "text",
+      "fields": [
+        {
+          "key": "why",
+          "label": "Why? (deeper cause)",
+          "type": "textarea"
+        },
+        {
+          "key": "evidence",
+          "label": "Evidence",
+          "type": "text"
+        }
+      ]
+    }
+  },
+  "rules": {}
+}
