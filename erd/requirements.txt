@@ -1,0 +1,8 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+sqlalchemy>=2.0
+pydantic>=2.6
+psycopg[binary]>=3.1        # PostgreSQL (also Flowmira's own database)
+pymysql>=1.1                # MySQL / MariaDB
+cryptography>=42            # MySQL 8 caching_sha2 authentication
+pymssql>=2.3                # Microsoft SQL Server

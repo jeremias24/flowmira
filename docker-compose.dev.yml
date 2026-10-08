@@ -1,0 +1,41 @@
+# Development overrides: hot reload for both apps.
+# Run:  docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+# Frontend: http://localhost:5173   API docs: http://localhost:8000/docs
+services:
+  db:
+    ports:
+      - "5432:5432"   # connect with a DB client if you like
+
+  backend:
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      CORS_ORIGINS: http://localhost:5173
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/templates:/app/templates
+    ports:
+      - "8000:8000"
+
+  erd:
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+    environment:
+      CORS_ORIGINS: http://localhost:5173
+    volumes:
+      - ./erd/app:/app/app
+    ports:
+      - "8001:8001"
+
+  frontend:
+    build:
+      context: ./frontend
+      target: build          # stop at the Node stage, skip nginx
+    command: npm run dev -- --host 0.0.0.0
+    environment:
+      VITE_API_URL: http://localhost:8000
+      VITE_ERD_API_URL: http://localhost:8001
+      CHOKIDAR_USEPOLLING: "true"   # reliable file watching on Windows/macOS
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/index.html:/app/index.html
+    ports:
+      - "5173:5173"

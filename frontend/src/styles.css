@@ -1,0 +1,248 @@
+@import "tailwindcss";
+
+/* dark: variant follows the app theme (set on <html data-theme="…">), not just the OS. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* =====================================================================
+   Design tokens. Tailwind turns these into utilities (bg-ink, text-ink-2,
+   border-line, bg-mark …) AND exposes them as CSS variables
+   (--color-ink …) that the canvas styles below use.
+   ===================================================================== */
+@theme {
+  --font-sans: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --color-ink: #16222e;
+  --color-ink-2: #4a5866;
+  --color-canvas: #eef1ef;
+  --color-paper: #ffffff;
+  --color-line: #cfd7d3;
+  --color-mark: #f4c542;         /* highlighter yellow: selection and focus */
+  --color-danger: #b23a2f;
+  --color-danger-soft: #fbeeec;
+  --color-on-ink: #ffffff;       /* text on bg-ink (primary buttons, toasts) */
+  --color-field: #ffffff;        /* inputs, selects, segmented buttons */
+  --color-warn: #8a6a00;         /* "Unsaved changes" */
+}
+
+/* Dark theme: same token names, new values, so every Tailwind utility flips automatically. */
+:root[data-theme="dark"] {
+  --color-ink: #e4e9ee;
+  --color-ink-2: #9aa8b5;
+  --color-canvas: #11171d;
+  --color-paper: #1a2129;
+  --color-line: #313d48;
+  --color-danger: #ff8f80;
+  --color-danger-soft: #3a2421;
+  --color-on-ink: #11171d;
+  --color-field: #131a21;
+  --color-warn: #f4c542;
+}
+
+/* Diagram colours. Fixed in BOTH themes: a diagram is a document (like paper on a dark
+   desk), so it looks the same on screen and in every export. */
+:root {
+  --dg-ink: #16222e;
+  --dg-ink-2: #4a5866;
+  --dg-line: #cfd7d3;
+  --dg-edge: #4a5866;
+}
+:root[data-theme="dark"] {
+  --dg-edge: #6c7d8c;            /* arrows also cross the dark canvas: mid-tone reads on both */
+}
+
+@layer base {
+  html, body, #root { height: 100%; }
+  body { @apply bg-canvas font-sans text-[15px] leading-[1.45] text-ink; }
+  :focus-visible { outline: 3px solid var(--color-mark); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+}
+
+/* =====================================================================
+   Canvas. Plain CSS on purpose: these style React Flow's own elements
+   and the SVG shapes, which utility classes can't reach cleanly.
+   Per-node variables: --zone (column colour), --stroke, --fill.
+   ===================================================================== */
+
+/* ---------- columns (zones) ---------- */
+.zone { width: 100%; height: 100%; background: color-mix(in srgb, var(--zone) 6%, #fff); border: 1px solid color-mix(in srgb, var(--zone) 30%, #fff); border-radius: 4px; }
+.zone__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; padding: 10px 10px 8px 12px; border-top: 6px solid var(--zone); border-radius: 4px 4px 0 0; }
+.zone__title { margin: 0; font-size: 17px; font-weight: 800; color: var(--zone); letter-spacing: -0.01em; }
+.zone__hint { margin: 1px 0 0; font-size: 11.5px; color: var(--dg-ink-2); }
+.zone__add { width: 28px; height: 28px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--zone) 45%, #fff); background: #fff; color: var(--zone); font-size: 18px; font-weight: 700; line-height: 1; cursor: pointer; flex-shrink: 0; }
+.zone__add:hover { background: var(--zone); color: #fff; }
+/* Lanes (rows layout): label band on the left, full lane height. */
+.zone--row { display: flex; border-radius: 0; background: color-mix(in srgb, var(--zone) 5%, #fff); }
+.zone--row .zone__head { width: var(--zone-head); flex-shrink: 0; flex-direction: column; justify-content: center; align-items: flex-start; gap: 10px; padding: 10px 12px; border-top: 0; border-left: 6px solid var(--zone); border-right: 1px solid color-mix(in srgb, var(--zone) 30%, #fff); border-radius: 0; background: color-mix(in srgb, var(--zone) 10%, #fff); }
+.zone--row .zone__title { font-size: 15px; line-height: 1.2; overflow-wrap: anywhere; }
+
+/* Zones are fixed, so React Flow disables their pointer events; re-enable the + button
+   and the resize grips only. */
+.react-flow__node-zone .zone__add,
+.react-flow__node-zone .zone__grip { pointer-events: all; }
+
+/* Resize grips on the right and bottom edges of columns/lanes. */
+.zone { position: relative; }
+.zone__grip { position: absolute; z-index: 2; touch-action: none; }
+/* Grips sit fully INSIDE the zone: lanes touch each other, so a grip straddling the edge
+   would be covered by the next lane and the drag would pan the canvas instead. */
+.zone__grip--right { top: 0; right: 0; width: 10px; height: 100%; cursor: ew-resize; }
+.zone__grip--bottom { left: 0; bottom: 0; height: 10px; width: 100%; cursor: ns-resize; }
+.zone__grip::after { content: ""; position: absolute; border-radius: 3px; background: var(--zone); opacity: 0; transition: opacity .12s; }
+.zone__grip--right::after { top: 50%; right: 3px; width: 4px; height: 44px; transform: translateY(-50%); }
+.zone__grip--bottom::after { left: 50%; bottom: 3px; height: 4px; width: 44px; transform: translateX(-50%); }
+.zone:hover > .zone__grip::after { opacity: .45; }
+.zone__grip:hover::after, .zone__grip:active::after { opacity: 1; }
+
+/* ---------- shapes ---------- */
+.shape {
+  position: relative; width: 100%; height: 100%;
+  --stroke: var(--stroke-doc, var(--dg-ink));
+  --text: var(--text-doc, var(--dg-ink));
+  color: var(--text);
+}
+.shape__svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.shape__outline { fill: var(--fill); stroke: var(--stroke); stroke-width: 1.6; stroke-linejoin: round; }
+.shape__detail { fill: none; stroke: var(--stroke); stroke-width: 1.6; }
+.shape__text { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; overflow: hidden; }
+.shape__label { font-weight: 600; font-size: 14px; line-height: 1.3; white-space: pre-wrap; word-break: break-word; }
+.shape__meta { margin-top: 4px; font-size: 11.5px; color: var(--text-2, var(--dg-ink-2)); display: flex; flex-wrap: wrap; gap: 2px 8px; }
+.shape__ctq { color: var(--text-accent, var(--stroke)); font-weight: 600; }
+.shape__editor { width: 100%; height: 100%; border: 0; background: transparent; resize: none; text-align: center; font: inherit; font-weight: 600; font-size: 14px; line-height: 1.3; color: inherit; outline: 2px solid var(--color-mark); border-radius: 2px; padding: 2px; }
+
+.shape--card, .shape--process, .shape--terminator, .shape--circle { background: var(--fill); border: 1.6px solid var(--stroke); }
+
+/* ---------- BPMN events & gateways: symbol + caption below ---------- */
+.shape--glyph { --cap: 24px; display: flex; flex-direction: column; align-items: center; }
+.shape__symbol { width: 100%; height: calc(100% - var(--cap)); flex-shrink: 0; }
+.shape--glyph .shape__caption { height: var(--cap); min-height: 0; white-space: nowrap; }
+.shape--glyph .shape__caption .shape__label { font-size: 12.5px; }
+.shape--event-start .shape__outline { stroke-width: 2; }
+.shape--event-end .shape__outline { stroke-width: 5; }
+.shape--event-timer .shape__outline, .shape--event-message .shape__outline { stroke-width: 2; }
+.shape--glyph .shape__detail { stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* Put the side/bottom connection dots on the symbol, not on the caption. */
+.shape--glyph .react-flow__handle-left,
+.shape--glyph .react-flow__handle-right { top: calc((100% - var(--cap)) / 2); }
+.shape--glyph .react-flow__handle-bottom { top: calc(100% - var(--cap)); bottom: auto; transform: translate(-50%, -50%); }
+.shape--card { border-color: var(--dg-line); border-left: 4px solid var(--stroke); border-radius: 3px; box-shadow: 0 1px 0 rgba(22, 34, 46, .06); }
+.shape--card .shape__text { align-items: flex-start; text-align: left; }
+.shape--card .shape__editor { text-align: left; }
+.shape--process { border-radius: 3px; }
+.shape--task { background: var(--fill); border: 1.6px solid var(--stroke); border-radius: 12px; }
+.shape--terminator { border-radius: 999px; }
+.shape--circle { border-radius: 50%; }
+.shape--text .shape__label { font-weight: 500; font-size: 15px; }
+
+/* ---------- icons & avatars (picture + caption) ---------- */
+.shape--icon, .shape--avatar { display: flex; flex-direction: column; align-items: center; }
+.shape__glyph { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; color: var(--icon-color, var(--stroke)); padding: 4px; }
+.shape__glyph svg { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
+.shape__caption { color: var(--caption, var(--dg-ink)); flex-shrink: 0; width: 100%; min-height: 22px; display: flex; justify-content: center; text-align: center; padding-top: 3px; }
+.shape__caption .shape__label { font-size: 13px; }
+.shape__caption .shape__editor { height: 22px; }
+.shape--avatar .shape__glyph svg { aspect-ratio: 1; width: auto; }
+
+/* ---------- persona card ---------- */
+.shape--persona { display: flex; flex-direction: column; background: var(--fill); border: 1.6px solid var(--stroke); border-top-width: 6px; border-radius: 6px; overflow: hidden; }
+.persona__head { display: flex; gap: 10px; align-items: center; padding: 10px 12px 8px; border-bottom: 1px solid var(--dg-line); }
+.persona__avatar { width: 52px; height: 52px; flex-shrink: 0; }
+.persona__who { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.persona__name { font-weight: 800; font-size: 16px; line-height: 1.2; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.persona__who .shape__editor { height: 24px; text-align: left; font-size: 16px; font-weight: 800; }
+.persona__role { font-size: 12.5px; font-weight: 600; color: var(--text-accent, var(--stroke)); }
+.persona__quote { margin-top: 2px; font-size: 12px; font-style: italic; color: var(--text-2, var(--dg-ink-2)); line-height: 1.3; }
+.persona__body { display: grid; grid-template-columns: 1fr 1fr; flex: 1; min-height: 0; }
+.persona__sec { padding: 8px 12px 10px; min-width: 0; overflow: hidden; }
+.persona__sec + .persona__sec { border-left: 1px solid var(--dg-line); }
+.persona__sec h4 { margin: 0 0 3px; font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--text-accent, var(--stroke)); }
+.persona__sec p { margin: 0; font-size: 12.5px; line-height: 1.35; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ---------- selection, resize, connection dots ---------- */
+.react-flow__resize-control.line { border-color: var(--color-mark) !important; border-width: 2px; }
+.react-flow__resize-control.handle { width: 9px; height: 9px; background: #fff; border: 2px solid var(--dg-ink); border-radius: 2px; }
+
+.react-flow__node-item .react-flow__handle { width: 12px; height: 12px; background: #fff; border: 2px solid var(--stroke, var(--dg-ink)); opacity: 0; transition: opacity .12s; z-index: 10; }
+.react-flow__node-item .react-flow__handle::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; } /* bigger grab area */
+.react-flow__node-item:hover .react-flow__handle,
+.react-flow__node-item.selected .react-flow__handle,
+.react-flow__handle.connectingto,
+.react-flow__handle.connectingfrom { opacity: 1; }
+.react-flow__handle:hover { background: var(--color-mark); }
+
+/* ---------- arrows ---------- */
+/* --edge = the arrow's own colour (set per arrow); falls back to the theme-aware default. */
+.react-flow__edge-path { stroke: var(--edge, var(--dg-edge)); stroke-width: 1.6; }
+.react-flow__edge.selected .react-flow__edge-path { stroke: var(--color-mark); stroke-width: 2.4; }
+.react-flow__edge-textbg { fill: #fff; }
+.react-flow__edge-text { font: 600 12px var(--font-sans); fill: var(--dg-ink); }
+
+/* ---------- Draw-arrow mode (hook class set on the canvas wrapper) ---------- */
+.arrow-mode .react-flow__node-item { cursor: crosshair; }
+.arrow-mode .react-flow__node-item .react-flow__handle { opacity: 1; }
+.arrow-mode .react-flow__node-item:hover .shape { outline: 2px dashed var(--dg-ink-2); outline-offset: 3px; }
+.react-flow__node.is-arrow-source .shape { outline: 3px solid var(--color-mark); outline-offset: 3px; }
+
+/* Diagram text is always document-dark, whatever the app theme. */
+.react-flow__node { color: var(--dg-ink); }
+
+/* Canvas background and React Flow's zoom controls follow the app theme. */
+.react-flow { --xy-background-color: var(--color-canvas); }
+.react-flow__controls { --xy-controls-button-background-color: var(--color-paper); --xy-controls-button-background-color-hover: var(--color-canvas); --xy-controls-button-color: var(--color-ink); --xy-controls-button-color-hover: var(--color-ink); --xy-controls-button-border-color: var(--color-line); box-shadow: 0 0 0 1px var(--color-line); }
+
+/* While exporting: document colours and no selection styling, whatever the theme. */
+.exporting { --dg-edge: #4a5866; }
+.exporting .react-flow__edge.selected /* --edge = the arrow's own colour (set per arrow); falls back to the theme-aware default. */
+.react-flow__edge-path { stroke: var(--edge, var(--dg-edge)); stroke-width: 1.6; }
+
+/* Dark mode: things that sit straight on the dark canvas (captions, text shapes, plain icons,
+   "No fill" shapes) switch to light text/outlines. Inside columns and in exports they keep
+   document colours. */
+:root[data-theme="dark"] .shape.on-canvas { --caption: var(--color-ink); }
+:root[data-theme="dark"] .shape.bare { --text: var(--color-ink); --stroke: var(--color-ink-2); }
+:root[data-theme] .exporting .shape.on-canvas { --caption: var(--dg-ink); }
+:root[data-theme] .exporting .shape.bare { --text: var(--text-doc, var(--dg-ink)); --stroke: var(--stroke-doc, var(--dg-ink)); }
+
+/* Alignment guides while dragging (drawn in canvas coordinates, never exported). */
+.align-guide { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 1000; }
+.align-guide--v { top: -5000px; height: 10000px; width: 0; border-left: 1.5px dashed #D9A400; }
+.align-guide--h { left: -5000px; width: 10000px; height: 0; border-top: 1.5px dashed #D9A400; }
+
+/* Caption halo: arrows pass BEHIND captions instead of crossing the letters. */
+.shape__caption .shape__label { text-shadow: 0 0 3px var(--halo, #fff), 0 0 3px var(--halo, #fff), 0 0 2px var(--halo, #fff); }
+:root[data-theme="dark"] .shape.on-canvas { --halo: var(--color-canvas); }
+:root[data-theme] .exporting .shape.on-canvas { --halo: #fff; }
+
+/* Moving dots on animated arrows (positioned by flowAnimation.ts). */
+.flow-dot { fill: var(--edge, var(--dg-edge)); stroke: #fff; stroke-width: 1.5; pointer-events: none; }
+
+/* Drag handle on the bend of a selected elbow arrow. */
+.edge-bend { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--color-mark); border: 2px solid var(--dg-ink); pointer-events: all; touch-action: none; z-index: 5; box-shadow: 0 0 0 3px rgba(255,255,255,.7); }
+.edge-bend--y { cursor: ns-resize; }
+.edge-bend--x { cursor: ew-resize; }
+.edge-bend:hover { filter: brightness(1.08); }
+
+/* =====================================================================
+   ERD module (src/erd): table cards and relationship lines.
+   Document colours like diagrams, so exports look the same in every theme.
+   ===================================================================== */
+.erd-table { width: 270px; background: #fff; color: var(--dg-ink); border: 1px solid #c9d2d8; border-radius: 6px; box-shadow: 0 1px 2px rgba(22,34,46,.08); overflow: hidden; font-size: 13px; }
+.erd-table--active { border-color: var(--erd-head); box-shadow: 0 0 0 2px var(--erd-head), 0 4px 14px rgba(22,34,46,.12); }
+.erd-table__head { display: flex; align-items: baseline; gap: 1px; height: 40px; padding: 0 12px; background: var(--erd-head); color: #fff; font-weight: 800; font-size: 14px; line-height: 40px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.erd-table__schema { font-weight: 500; opacity: .8; }
+.erd-col { position: relative; display: grid; grid-template-columns: 18px 1fr auto; align-items: center; gap: 6px; height: 28px; padding: 0 12px 0 8px; border-top: 1px solid #edf0f2; }
+.erd-col:first-of-type { border-top: 0; }
+.erd-col--pk { background: color-mix(in srgb, var(--erd-head) 7%, #fff); }
+.erd-col--empty { display: block; color: var(--dg-ink-2); font-style: italic; }
+.erd-col__key { display: grid; place-items: center; color: var(--erd-head); }
+.erd-col__name { font-weight: 600; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.erd-col--pk .erd-col__name { font-weight: 800; }
+.erd-col__nn { color: #b23a2f; margin-left: 2px; }
+.erd-col__type { color: var(--dg-ink-2); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px; max-width: 120px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-transform: lowercase; }
+.erd-table .erd-handle { width: 6px; height: 6px; min-width: 0; min-height: 0; opacity: 0; border: 0; pointer-events: none; }
+.erd-table .erd-handle.react-flow__handle-left { left: 0; }
+.erd-table .erd-handle.react-flow__handle-right { right: 0; }
+.erd-rel { stroke: var(--dg-edge) !important; stroke-width: 1.6 !important; }
+.erd-rel__mark { stroke-linecap: round; }
+.erd-rel--active { stroke: #2B5F9E !important; stroke-width: 2.4 !important; }
+:root[data-theme="dark"] .erd-rel--active { stroke: #6ea8ff !important; }
+:root[data-theme] .exporting .erd-rel--active { stroke: var(--dg-edge) !important; stroke-width: 1.6 !important; }
+:root[data-theme] .exporting .erd-table--active { border-color: #c9d2d8; box-shadow: 0 1px 2px rgba(22,34,46,.08); }

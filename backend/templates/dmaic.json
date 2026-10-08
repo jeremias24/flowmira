@@ -1,0 +1,93 @@
+{
+  "key": "dmaic",
+  "name": "DMAIC",
+  "version": 1,
+  "accent": "#3B3F8F",
+  "description": "Define, Measure, Analyze, Improve, Control: plan the activities, tools and deliverables of an improvement project.",
+  "layout": {
+    "type": "columns",
+    "zoneWidth": 230,
+    "zoneHeight": 700,
+    "gap": 14,
+    "itemHeight": 72,
+    "itemGap": 20,
+    "headerHeight": 58
+  },
+  "zones": [
+    {
+      "id": "define",
+      "label": "Define",
+      "hint": "Problem, scope, CTQs",
+      "color": "#3B3F8F"
+    },
+    {
+      "id": "measure",
+      "label": "Measure",
+      "hint": "Baseline data",
+      "color": "#2B5F9E"
+    },
+    {
+      "id": "analyze",
+      "label": "Analyze",
+      "hint": "Root causes",
+      "color": "#1F7A80"
+    },
+    {
+      "id": "improve",
+      "label": "Improve",
+      "hint": "Solutions and pilots",
+      "color": "#2F7D4F"
+    },
+    {
+      "id": "control",
+      "label": "Control",
+      "hint": "Sustain the gains",
+      "color": "#7A6A1F"
+    }
+  ],
+  "shapes": {
+    "item": {
+      "defaultLabel": "New activity",
+      "defaultShape": "card",
+      "fields": [
+        {
+          "key": "owner",
+          "label": "Owner",
+          "type": "text",
+          "showOnCard": true
+        },
+        {
+          "key": "tool",
+          "label": "Tool / method (e.g. Pareto, 5 Whys)",
+          "type": "text",
+          "showOnCard": true
+        },
+        {
+          "key": "deliverable",
+          "label": "Deliverable",
+          "type": "text"
+        },
+        {
+          "key": "due",
+          "label": "Due date",
+          "type": "text"
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "type": "textarea"
+        }
+      ]
+    }
+  },
+  "rules": {
+    "itemsSnapToZone": true
+  },
+  "palette": [
+    "card",
+    "process",
+    "decision",
+    "document",
+    "note"
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "key": "flowchart",
+  "name": "Flowchart",
+  "version": 3,
+  "description": "A free canvas for process maps and flowcharts. Drag shapes from the left, then connect them with arrows.",
+  "layout": {
+    "type": "free"
+  },
+  "zones": [],
+  "palette": [
+    "process",
+    "decision",
+    "terminator",
+    "data",
+    "document",
+    "subprocess",
+    "database",
+    "note",
+    "circle",
+    "text",
+    "server",
+    "cloud",
+    "queue",
+    "service",
+    "browser",
+    "mobile",
+    "actor"
+  ],
+  "shapes": {
+    "item": {
+      "defaultLabel": "Step",
+      "defaultShape": "process",
+      "fields": [
+        {
+          "key": "owner",
+          "label": "Owner",
+          "type": "text"
+        },
+        {
+          "key": "duration",
+          "label": "Cycle time",
+          "type": "text"
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "type": "textarea"
+        }
+      ]
+    }
+  },
+  "rules": {},
+  "accent": "#3E6A8A"
+}
